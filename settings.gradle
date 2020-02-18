@@ -1,0 +1,2 @@
+include ':app', ':glcanvas'
+rootProject.name='GL Canvas'
