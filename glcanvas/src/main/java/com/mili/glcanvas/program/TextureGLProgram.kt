@@ -4,11 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.opengl.GLES20
 import android.opengl.Matrix
+import androidx.collection.LruCache
 import com.mili.glcanvas.glcanvas.R
 import com.mili.glcanvas.utils.Logger
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.*
 
 class TextureGLProgram(context: Context, width: Int, height: Int) :
     GLProgram(context, R.raw.texture_vertex_shader, R.raw.texture_fragment_shader) {
@@ -27,7 +27,16 @@ class TextureGLProgram(context: Context, width: Int, height: Int) :
     private var aTextureCoordinatesLocation: Int = 0
     private var uTextureUnitLocation: Int = 0
     private var modelMatrix = FloatArray(16)
-    private var bitmapTextureMap = WeakHashMap<Bitmap, BitmapTexture>()
+    private var bitmapTextureMap = object : LruCache<Bitmap, BitmapTexture>(10) {
+        override fun entryRemoved(
+            evicted: Boolean,
+            key: Bitmap,
+            oldValue: BitmapTexture,
+            newValue: BitmapTexture?
+        ) {
+            oldValue.finalize()
+        }
+    }
 
     init {
         // 生成模型矩阵
@@ -101,23 +110,17 @@ class TextureGLProgram(context: Context, width: Int, height: Int) :
 
     override fun release() {
         Logger.d(TAG, "Texture program release.")
-        bitmapTextureMap.forEach {
-            it.value.finalize()
-        }
-        bitmapTextureMap.clear()
+        bitmapTextureMap.evictAll()
     }
 
     private fun getTexture(bitmap: Bitmap): BitmapTexture {
-        var bitmapTexture = bitmapTextureMap[bitmap]
+        var bitmapTexture = bitmapTextureMap.get(bitmap)
         if (bitmapTexture != null && bitmapTexture.textureId > 0) {
-            Logger.d(TAG, "Bitmap texture has exist.")
             return bitmapTexture
         }
         bitmapTextureMap.remove(bitmap)
-        bitmapTexture?.finalize()
-        Logger.d(TAG, "Create new bitmap texture.")
         bitmapTexture = BitmapTexture(bitmap)
-        bitmapTextureMap[bitmap] = bitmapTexture
+        bitmapTextureMap.put(bitmap, bitmapTexture)
         return bitmapTexture
     }
 }
