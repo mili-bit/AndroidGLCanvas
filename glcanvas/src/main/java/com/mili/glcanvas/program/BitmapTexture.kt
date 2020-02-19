@@ -27,9 +27,20 @@ class BitmapTexture(var bitmap: Bitmap?) {
             return
         }
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureObjectIds[0])
+        GLES20.glTexParameteri(
+            GLES20.GL_TEXTURE_2D,
+            GLES20.GL_TEXTURE_MIN_FILTER,
+            GLES20.GL_LINEAR_MIPMAP_LINEAR
+        )
+        GLES20.glTexParameteri(
+            GLES20.GL_TEXTURE_2D,
+            GLES20.GL_TEXTURE_MAG_FILTER,
+            GLES20.GL_LINEAR
+        )
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
+        GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D)
         // 暂时解绑纹理，用时再绑定
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+        // GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
         textureId = textureObjectIds[0]
     }
 
@@ -44,7 +55,7 @@ class BitmapTexture(var bitmap: Bitmap?) {
         // 解绑纹理
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
         // 将纹理单元0设为活动纹理单元
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        // GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
     }
 
     fun finalize() {
