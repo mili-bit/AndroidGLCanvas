@@ -3,6 +3,7 @@ package com.mili.glcanvas
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
+import android.view.SurfaceHolder
 import com.mili.glcanvas.extensions.isSupportEs2
 import com.mili.glcanvas.extensions.longToast
 import javax.microedition.khronos.egl.EGLConfig
@@ -41,6 +42,11 @@ abstract class GLView : GLSurfaceView, GLSurfaceView.Renderer {
             it.clearBuffer()
             onGLDraw(it)
         }
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder?) {
+        super.surfaceDestroyed(holder)
+        glCanvas?.release()
     }
 
     abstract fun onGLDraw(canvas: GLCanvas)

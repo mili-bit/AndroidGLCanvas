@@ -24,4 +24,6 @@ abstract class GLProgram(
         context.readResourceText(fragmentShaderResId)
     )
 
+    abstract fun release()
+
 }

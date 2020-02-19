@@ -4,7 +4,7 @@ import android.util.Log
 import com.mili.glcanvas.glcanvas.BuildConfig
 
 object Logger {
-    private var ON = BuildConfig.DEBUG
+    var ON = BuildConfig.DEBUG
     private const val TAG = "GLL"
 
     fun i(subTag: String = "", message: String, throwable: Throwable? = null) {

@@ -135,4 +135,8 @@ class BaseGLProgram(context: Context, width: Int, height: Int) :
         GLES20.glDisableVertexAttribArray(aPositionLocation)
         GLES20.glDisableVertexAttribArray(aColorLocation)
     }
+
+    override fun release() {
+
+    }
 }

@@ -54,4 +54,9 @@ class GLCanvas(private val context: Context) {
     fun drawBitmap(bitmap: Bitmap, left: Float, top: Float) {
         assembleTextureGLProgram()?.drawBitmap(bitmap, left, top)
     }
+
+    fun release(){
+        baseGLProgram?.release()
+        textureGLProgram?.release()
+    }
 }

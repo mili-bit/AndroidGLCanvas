@@ -4,15 +4,17 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.opengl.GLES20
 import android.opengl.Matrix
-import com.mili.glcanvas.extensions.toTexture
 import com.mili.glcanvas.glcanvas.R
+import com.mili.glcanvas.utils.Logger
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.*
 
 class TextureGLProgram(context: Context, width: Int, height: Int) :
     GLProgram(context, R.raw.texture_vertex_shader, R.raw.texture_fragment_shader) {
 
     companion object {
+        private const val TAG = "TextureGLProgram"
         private const val POSITION_COMPONENT_COUNT = 2
         private const val TEXTURE_COMPONENT_COUNT = 2
         private const val STRIDE =
@@ -25,6 +27,7 @@ class TextureGLProgram(context: Context, width: Int, height: Int) :
     private var aTextureCoordinatesLocation: Int = 0
     private var uTextureUnitLocation: Int = 0
     private var modelMatrix = FloatArray(16)
+    private var bitmapTextureMap = WeakHashMap<Bitmap, BitmapTexture>()
 
     init {
         // 生成模型矩阵
@@ -43,7 +46,10 @@ class TextureGLProgram(context: Context, width: Int, height: Int) :
         //启用GL程序
         GLES20.glUseProgram(program)
         // 纹理绑定
-        val textureId = bitmap.toTexture()
+        val bitmapTexture = getTexture(bitmap).apply {
+            uploadTexture()
+            activeTexture()
+        }
         // 告诉纹理均匀采样器在着色器中使用这个纹理，告诉它从纹理单元0读取
         GLES20.glUniform1i(uTextureUnitLocation, 0)
         // 正交投影
@@ -90,7 +96,28 @@ class TextureGLProgram(context: Context, width: Int, height: Int) :
         GLES20.glDisableVertexAttribArray(aPositionLocation)
         GLES20.glDisableVertexAttribArray(aTextureCoordinatesLocation)
         // 解绑纹
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
-        GLES20.glDeleteTextures(1, intArrayOf(textureId), 0)
+        bitmapTexture.inactiveTexture()
+    }
+
+    override fun release() {
+        Logger.d(TAG, "Texture program release.")
+        bitmapTextureMap.forEach {
+            it.value.finalize()
+        }
+        bitmapTextureMap.clear()
+    }
+
+    private fun getTexture(bitmap: Bitmap): BitmapTexture {
+        var bitmapTexture = bitmapTextureMap[bitmap]
+        if (bitmapTexture != null && bitmapTexture.textureId > 0) {
+            Logger.d(TAG, "Bitmap texture has exist.")
+            return bitmapTexture
+        }
+        bitmapTextureMap.remove(bitmap)
+        bitmapTexture?.finalize()
+        Logger.d(TAG, "Create new bitmap texture.")
+        bitmapTexture = BitmapTexture(bitmap)
+        bitmapTextureMap[bitmap] = bitmapTexture
+        return bitmapTexture
     }
 }
